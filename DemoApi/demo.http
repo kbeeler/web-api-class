@@ -1,0 +1,17 @@
+# For more info on HTTP files go to https://aka.ms/vs/httpfile
+GET http://localhost:1337/blog/2023/2/30
+###
+
+GET http://localhost:1337/colors?color=red
+###
+
+GET http://localhost:1337/employees?department=dev
+
+###
+POST http://localhost:1337/bug-reports
+Content-Type: application/json
+
+{
+  "application": "visual Studio 2022",
+  "issue": "Could not  "
+: }
