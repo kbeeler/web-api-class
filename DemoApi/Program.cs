@@ -1,5 +1,6 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// Configuration for the "internals" for the application, which is mostly services and overriding the way stuff works.
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -8,6 +9,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+// everything after here is "Middleware" - which is handing incoming requests and outgoing resposes.
+// We will create some middleware later.
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -18,11 +22,13 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthorization();
 
+// this looks at all of our controllers, reads the routing attributes, and creates a "lookup table" so that
+// when requests come in, they can be sent to the right code to process that request.
 app.MapControllers();
 
-/*app.MapGet("/info", () =>
-{
-    return "all good here";
-});*/
+//app.MapGet("/info", () =>
+//{
+//    return "All Good Here";
+//});
 
-app.Run();
+app.Run(); // Blocking Call
