@@ -1,17 +1,37 @@
 ﻿
+
+using EmployeesApi.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace EmployeesApi.Controllers;
 
 public class EmployeesController : ControllerBase
 {
-    [HttpGet("/employees")]
-    public async Task<ActionResult<EmployeeSummaryListResponse>> GetAllEmployees()
+    private readonly IManageEmployees _employeeManager;
+
+    public EmployeesController(IManageEmployees employeeManager)
     {
-        return Ok();
+        _employeeManager = employeeManager;
+    }
+
+    [HttpGet("/employees")]
+    public async Task<ActionResult<EmployeeSummaryListResponse>> GetAllEmployees([FromQuery] string department = "All")
+    {
+        EmployeeSummaryListResponse response = await _employeeManager.GetAllEmployeesAsync(department);
+        return Ok(response);
     }
 
     [HttpGet("/employees/{id}")]
     public async Task<ActionResult<EmployeeDetailsItemResponse>> GetAnEmployee(string id)
     {
-        return Ok();
+        EmployeeDetailsItemResponse? response = await _employeeManager.GetEmployeeByIdAsync(id);
+       
+        if(response is null)
+        {
+            return NotFound();
+        } else
+        {
+            return Ok(response);
+        }
     }
 }
