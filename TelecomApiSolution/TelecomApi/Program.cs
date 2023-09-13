@@ -41,5 +41,3 @@ public record ContactAssignmentResponse
     public string PhoneNumber { get; set; } = string.Empty;
     public string PhoneExtension { get; set; } = string.Empty;
 }
-
-//ok
