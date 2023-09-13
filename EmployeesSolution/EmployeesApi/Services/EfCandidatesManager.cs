@@ -11,6 +11,7 @@ public class EfCandidatesManager : IManageCandidates
     private readonly EmployeesDataContext _context;
     private readonly IMapper _mapper;
     private readonly MapperConfiguration _mapperConfig;
+    private readonly ILogger<EfCandidatesManager> _logger;
 
     private readonly List<string> _departments = new()
     {
@@ -19,12 +20,13 @@ public class EfCandidatesManager : IManageCandidates
         "hr"
     };
 
-    public EfCandidatesManager(EmployeesDataContext context, IMapper mapper, MapperConfiguration mapperConfig, IProvideTheTelecomApi telecomApi)
+    public EfCandidatesManager(EmployeesDataContext context, IMapper mapper, MapperConfiguration mapperConfig, IProvideTheTelecomApi telecomApi, ILogger<EfCandidatesManager> logger)
     {
         _context = context;
         _mapper = mapper;
         _mapperConfig = mapperConfig;
         _telecomApi = telecomApi;
+        _logger = logger;
     }
 
     public async Task<CandidateResponseModel> CreateCandidateAsync(CandidateRequestModel request)
@@ -74,12 +76,28 @@ public class EfCandidatesManager : IManageCandidates
             return new CandidateHiringResponse.CandidateNotAvailable();
         }
 
-        if (candidate.RequiredSalaryMin > request.StartingSalary)
+        if (candidate.RequiredSalaryMin >= request.StartingSalary)
         {
             return new CandidateHiringResponse.IncorrectSalaryOffered();
         }
 
-        EmployeeContactMechanismsResponse phoneAndEmailAssignment = await _telecomApi.GetPhoneAndEmailAssignmentAsync(candidate.FirstName, candidate.LastName);
+        EmployeeContactMechanismsResponse phoneAndEmailAssignment;
+        try
+        {
+            phoneAndEmailAssignment = await _telecomApi.GetPhoneAndEmailAssignmentAsync(candidate.FirstName, candidate.LastName);
+        }
+        catch (Exception)
+        {
+
+            phoneAndEmailAssignment = new EmployeeContactMechanismsResponse
+            {
+                Email = "Unable to Assign - Check Back",
+                PhoneNumber = "Unable to Assign - Check Back"
+            };
+
+            _logger.LogError("Unable to assign email and phone number to candidate {0}", candidate.Id);
+        }
+        
         candidate.Status = CandidateStatus.Hired;
         var newEmployee = new EmployeeEntity
         {
@@ -96,18 +114,13 @@ public class EfCandidatesManager : IManageCandidates
 
         return new CandidateHiringResponse.CandidateHired(_mapper.Map<CandidateResponseModel>(candidate));
      
-
-
     }
 }
 
 public abstract record CandidateHiringResponse
 {
-  
-
     public record DepartmentNotFound : CandidateHiringResponse { }
     public record CandidateNotAvailable : CandidateHiringResponse { }
     public record IncorrectSalaryOffered : CandidateHiringResponse { }
     public record CandidateHired(CandidateResponseModel response) : CandidateHiringResponse { }
-
 }
