@@ -11,8 +11,11 @@ public class CandidatesController : ControllerBase
     }
 
     [HttpPost("/candidates")]
+
+    [ResponseCache(Location = ResponseCacheLocation.Any, Duration = 60)]
     public async Task<ActionResult<CandidateResponseModel>> AddACandidate([FromBody] CandidateRequestModel request)
     {
+        // we know we have a "valid" request.
         CandidateResponseModel response = await _candidateManager.CreateCandidateAsync(request);
         return CreatedAtRoute("candidates-getbyid", new { id=response.Id }, response);
     }
